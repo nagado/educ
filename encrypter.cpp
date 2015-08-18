@@ -5,70 +5,68 @@
 #include <random>
 #include <sstream>
 
-template <class Txt>
-void put_error(Txt error_message)
+
+//=====put_error=====//
+void put_error(const std::string& error_message)
 {
   std::cout << error_message;
   exit(1);
 }
 
-void shuffle(char* array, const std::streampos* size)
+//=====shuffle=====//
+
+void shuffle(std::vector<char>& input)
 {
   std::default_random_engine generator;
-  std::uniform_int_distribution<int> distribution(0, long(*size) - 1);
-  
-  for (int i = 0; i < *size; ++i)
+  std::uniform_int_distribution<int> distribution(0, input.size() - 1);
+  int i = 0;
+
+  for (std::vector<char>::iterator iter = input.begin(); iter < input.end(); ++i, ++iter)
   {
     int random = distribution(generator);
-    char tmp = array[i];
-    array[i] = array[random];
-    array[random] = tmp;
+    char tmp = input[i];
+    input[i] = input[random];
+    input[random] = tmp;
   } 
 }
 
-void change_extension(char* new_name, const char* filename, const char* extension, char* old_extension = nullptr)
+//=====replace_extension=====//
+std::string replace_extension(const std::string& filename, const std::string& new_extension)
 {
   int i;
+  std::string new_name;
+  std::string::const_iterator iter = new_extension.begin();
 
   for (i = 0; filename[i] != '.'; ++i);
 
   ++i;
-
-  if (old_extension != nullptr)
-  { 
-    int k;
-
-    for (k = 0; filename[k + i] != 0; ++k)
-      old_extension[k] = filename[k + i];
-
-    old_extension[k + 1] = 0;
-  }
-
   if (filename[i] == '.')
-    put_error("Oh, snap! something went wrong.\n");
+    put_error("Oh, snap! Something went wrong.\n");
 
-  strncpy(new_name, filename, i + 1);
+  new_name = filename.substr(0, i + 1);
 
-  for (int k = 0; extension[k] != 0; ++k, ++i)
-    new_name[i] = extension[k];
+  for (int k = 0; iter < new_extension.end(); ++k, ++i, ++iter)
+    new_name[i] = new_extension[k];
 
-  new_name[i] = 0;
+  return new_name;
 }
 
-char* read_file(const char* filename, const std::string error_message, std::streampos* const size)
+//=====read_file=====//
+std::vector<char> read_file(const std::string& filename, const std::string error_message, std::streampos& size)
 {
   std::ifstream file (filename, std::ios::in|std::ios::binary|std::ios::ate);
+  size = file.tellg();
   if (!file.is_open())
   {
     file.close();
     put_error(error_message);
   }
 
-  *size = file.tellg();
-  char* input = new char[*size];
+  char inp[(long int)(size)];
   file.seekg(0, std::ios::beg);
-  file.read(input, *size);
+  file.read(inp, size);
   file.close();
+  std::vector<char> input(inp, inp + size);
 
   if (size == 0)
     put_error("Given file is empty\n");
@@ -76,7 +74,8 @@ char* read_file(const char* filename, const std::string error_message, std::stre
   return input;
 }
 
-void write_file(const char* filename, const char* output, const std::string error_message, const std::streampos* size)
+//=====write_file=====//
+void write_file(const std::string& filename, std::vector<char> output, const std::string error_message, std::streampos& size)
 {
   std::ofstream file (filename, std::ios::out|std::ios::binary|std::ios::trunc);
   if (!file.is_open())
@@ -84,81 +83,58 @@ void write_file(const char* filename, const char* output, const std::string erro
     put_error(error_message);
   }
   
-  file.write(output, *size);
+  file.write(&output[0], size);
 }
 
-
-void make_key(const char* filename)
+//=====make_key=====//
+void make_key(const std::string& filename)
 {
   std::streampos size;
-  char* input = read_file(filename, "Couldn't access file-base for a key.\n", &size);
-  shuffle(input, &size); 
-  char keyname[strlen(filename)];
-  change_extension(keyname, filename, "key");
-  write_file(keyname, input, "Couldn't open file to save the result.\n", &size);
+  std::vector<char> input = read_file(filename, "Couldn't access file-base for a key.\n", size);
+  shuffle(input);
+  std::string keyname = replace_extension(filename, "key");
+  write_file(keyname, input, "Couldn't open file to save the result.\n", size);
 }
 
-std::streampos handle_meta_enc(
-  std::streampos size_of_file, std::streampos size_of_key, const char* keyname,
-  std::ofstream& out, const char* extension
-)
+//=====read_key_position=====//
+std::streampos read_key_position(const std::string keyname)
 {
   std::streampos start = 0;
-  char key_meta[strlen(keyname) + 1];
-  change_extension(key_meta, keyname, "meta");
-  std::ifstream meta (key_meta);
-  std::string tmp = "0";
-  long int itmp = 0;
+  std::ifstream meta (keyname + ".meta");
   if (meta.is_open())
   {
-    std::getline(meta, tmp);
-    std::stringstream convert(tmp);
-    convert >> itmp;
-    start = itmp;
+    long int tmp = 0;
+    meta >> tmp;
+    start = tmp;
   }
-  meta.close();
-  std::ofstream out_meta (key_meta);
-  if ((long int)(size_of_key) - itmp + 1 < size_of_file)
-    put_error("The key needs to be changed. There is not enough data to encrypt file safely.\n");
-
-  tmp = tmp + " " + extension + "\n";
-  const char* st = tmp.c_str();
-  out_meta << itmp + size_of_file;
-  out.write(st, tmp.length());
 
   return start;
 }
 
-long int read_meta_dec(std::ifstream& file, char* extension)
+//=====record_meta=====//
+void record_meta(const long int key_starts, const long int size_of_file, const std::string keyname, std::ofstream& out)
 {
-  long int key_starts = 0;
-  std::string meta;
-  file.seekg(0, std::ios::beg);
-  std::getline(file, meta);
-  char starts[meta.length()];
-  int i;
+  std::ofstream meta (keyname + ".meta", std::ios::out|std::ios::trunc);
+  meta << key_starts + size_of_file;
 
-  for (i = 0; meta[i] != ' '; ++i)
-    starts[i] = meta[i];
-  
-  starts[++i] = 0;
-
-  for (int k = 0; i < meta.length(); ++i, ++k)
-    extension[k] = meta[i];
-
-  extension[++i] = 0;
-  std::stringstream convert(starts);
-  convert >> key_starts;
-
-  return key_starts;
+  std::string tmp = std::to_string(key_starts) + "\n";
+  out.write(tmp.c_str(), tmp.length());
 }
 
+//=====read_meta=====//
+std::streampos read_meta(std::ifstream& file)
+{
+  std::string tmp;
+  std::getline(file, tmp);
+  std::streampos key_starts = std::stol (tmp, nullptr);
 
-void crypting(const char* filename, const char* keyname, bool encrypt = true)
+  return key_starts; 
+}
+
+//=====crypting=====//
+void crypting(const std::string& filename, const std::string& keyname, bool encrypt = true)
 {
   std::streampos key_starts;
-  char extension[10];
-  char outname[strlen(filename)];
   std::ifstream file (filename, std::ios::in|std::ios::binary|std::ios::ate);
   std::ifstream key (keyname, std::ios::in|std::ios::binary|std::ios::ate);
   if (!file.is_open() || !key.is_open())
@@ -168,17 +144,18 @@ void crypting(const char* filename, const char* keyname, bool encrypt = true)
   std::ofstream out;
   if (encrypt)
   {
-    change_extension(outname, filename, "enc", extension);
-    out.open(outname, std::ios::out|std::ios::binary);
-    key_starts = handle_meta_enc(file.tellg(), key.tellg(), keyname, out, extension);
+    out.open(filename + ".enc", std::ios::out|std::ios::binary);
+    key_starts = read_key_position(keyname);
+    if ((long int)(key.tellg()) - key_starts + 1 < file.tellg())
+      put_error("The key needs to be changed. There is not enough data to encrypt file safely.\n");
+    record_meta(key_starts, file.tellg(), keyname, out);
     file.seekg(0, std::ios::beg);
   }
   else
   {
     file.seekg(0, std::ios::beg);
-    key_starts = read_meta_dec(file, extension);
-    change_extension (outname, filename, extension);
-    out.open(outname, std::ios::out|std::ios::binary);
+    key_starts = read_meta(file);
+    out.open(filename.substr(0, filename.length() - 4), std::ios::out|std::ios::binary);
   }
   key.seekg(key_starts, std::ios::beg);
   if (!out.is_open())
@@ -187,17 +164,20 @@ void crypting(const char* filename, const char* keyname, bool encrypt = true)
   }
 
   char orig;
-  char code;
   
   while (file.read(&orig, 1))
   {
+    char code;
     key.read(&code, 1);
     char res = orig ^ code;
+
+    std::cout << orig << ' ' << code << ' ' << res << '\n';
 
     out.write(&res, 1);
   }
 }
 
+//=====main=====//
 int main(int argc, char* argv[])
 {
   if (argv[1][0] != '-')
