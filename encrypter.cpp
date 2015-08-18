@@ -1,168 +1,222 @@
 #include <iostream>
+#include <string.h>
 #include <fstream>
-#include <regex>
-#include <string>
-#include <stdlib.h>
-#include <unistd.h>
+#include <ios>
+#include <random>
+#include <sstream>
 
-using namespace std;
-
-string read_file(string& address, string error_message, bool clean = false)
+template <class Txt>
+void put_error(Txt error_message)
 {
-  ifstream f;
-
-  f.open(address);
-  if(!f)
-  {
-    cout << error_message;
-    f.close();
-    exit(1);
-  }
-
-  char c;
-  string text = "";
-
-
-  while (f.get(c))
-    if ((c != ' ') && (c != '\n') && (c != '.') || clean)
-      text += c;
-
-  f.close();
-
-  if (text == "")
-  {
-    cout << "Given file is empty";
-    exit(1);
-  }
-
-  return text;
+  std::cout << error_message;
+  exit(1);
 }
 
-void record_file(string& address, string& text)
+void shuffle(char* array, const std::streampos* size)
 {
-  ofstream f;
-  f.open(address);
-  f << text;
-  f.close();
-}
-
-string encrypt(string& text, string& key)
-{
-  int shift = rand() % 100;
-  cout << shift << " " << char(shift) << endl;
-
-  for (int i = 0; i < text.length(); i++)
-    text[i] = text[i] ^ key[(i + shift) % key.length()];
-
-  text = char(shift) + text;
-
-  return text;
-}
-
-string decrypt(string& text, string& key)
-{
-  int shift = text[0];
-  cout << shift << " " << char(shift) << endl;
-  text = text.substr(1, text.length());
-
-  for (int i = 0; i < text.length(); i++)
-    text[i] = text[i] ^ key[(i + shift) % key.length()];
-
-  return text;
-}
-
-string shuffle(string& str)
-{
-  char tmp;
-  int random;
-
-  for (int i = 0; i < str.length(); i++)
-  {
-    random = rand() % str.length();
-    tmp = str[i];
-    str[i] = str[random];
-    str[random] = tmp;
-  }
-    
-  return str;
-}
-
-void create_key(string& address)
-{
-  string key_base = read_file(address, "No file found. Provide file name in parameters.\n", true);
-  key_base = shuffle(key_base);
+  std::default_random_engine generator;
+  std::uniform_int_distribution<int> distribution(0, long(*size) - 1);
   
-  ofstream key;
-  key.open("key.eck");
-  key << key_base;
-  key.close();
+  for (int i = 0; i < *size; ++i)
+  {
+    int random = distribution(generator);
+    char tmp = array[i];
+    array[i] = array[random];
+    array[random] = tmp;
+  } 
 }
 
-void encrypt_file(string& address)
+void change_extension(char* new_name, const char* filename, const char* extension, char* old_extension = nullptr)
 {
-  string text = read_file(address, "No file found. Provide file name for the document you want to encrypt.\n");
-  cout << "Create password. Be aware that you can't use spaces: ";
-  string password = "", key_address = "key.eck";
-  cin >> password;
+  int i;
 
-  string key = read_file(key_address, "No key found. Provide one or make a new one.\n");
-  text = encrypt(text, password);
-  text = encrypt(text, key);
-  record_file(address, text);
-  cout << "Your file is encrypted. Please remember your password and keep your key file. Without them you will not able to decrypt your information.\n";
+  for (i = 0; filename[i] != '.'; ++i);
+
+  ++i;
+
+  if (old_extension != nullptr)
+  { 
+    int k;
+
+    for (k = 0; filename[k + i] != 0; ++k)
+      old_extension[k] = filename[k + i];
+
+    old_extension[k + 1] = 0;
+  }
+
+  if (filename[i] == '.')
+    put_error("Oh, snap! something went wrong.\n");
+
+  strncpy(new_name, filename, i + 1);
+
+  for (int k = 0; extension[k] != 0; ++k, ++i)
+    new_name[i] = extension[k];
+
+  new_name[i] = 0;
 }
 
-void decrypt_file(string& address)
+char* read_file(const char* filename, const std::string error_message, std::streampos* const size)
 {
-  string text = read_file(address, "No file found. Provide a file that you want to decrypt.\n");
-  string password = "", key_address = "key.eck";
-  cout << "Password: ";
-  cin >> password;
-  string key = read_file(key_address, "No key found. The key that was used when encrypting should be in the same foulder as the program.\n");
-  text = decrypt(text, key);
-  text = decrypt(text, password);
-  record_file(address, text);
-  cout << "Your file is decrypted.\n";
+  std::ifstream file (filename, std::ios::in|std::ios::binary|std::ios::ate);
+  if (!file.is_open())
+  {
+    file.close();
+    put_error(error_message);
+  }
+
+  *size = file.tellg();
+  char* input = new char[*size];
+  file.seekg(0, std::ios::beg);
+  file.read(input, *size);
+  file.close();
+
+  if (size == 0)
+    put_error("Given file is empty\n");
+
+  return input;
 }
 
+void write_file(const char* filename, const char* output, const std::string error_message, const std::streampos* size)
+{
+  std::ofstream file (filename, std::ios::out|std::ios::binary|std::ios::trunc);
+  if (!file.is_open())
+  {
+    put_error(error_message);
+  }
+  
+  file.write(output, *size);
+}
+
+
+void make_key(const char* filename)
+{
+  std::streampos size;
+  char* input = read_file(filename, "Couldn't access file-base for a key.\n", &size);
+  shuffle(input, &size); 
+  char keyname[strlen(filename)];
+  change_extension(keyname, filename, "key");
+  write_file(keyname, input, "Couldn't open file to save the result.\n", &size);
+}
+
+std::streampos handle_meta_enc(
+  std::streampos size_of_file, std::streampos size_of_key, const char* keyname,
+  std::ofstream& out, const char* extension
+)
+{
+  std::streampos start = 0;
+  char key_meta[strlen(keyname) + 1];
+  change_extension(key_meta, keyname, "meta");
+  std::ifstream meta (key_meta);
+  std::string tmp = "0";
+  long int itmp = 0;
+  if (meta.is_open())
+  {
+    std::getline(meta, tmp);
+    std::stringstream convert(tmp);
+    convert >> itmp;
+    start = itmp;
+  }
+  meta.close();
+  std::ofstream out_meta (key_meta);
+  if ((long int)(size_of_key) - itmp + 1 < size_of_file)
+    put_error("The key needs to be changed. There is not enough data to encrypt file safely.\n");
+
+  tmp = tmp + " " + extension + "\n";
+  const char* st = tmp.c_str();
+  out_meta << itmp + size_of_file;
+  out.write(st, tmp.length());
+
+  return start;
+}
+
+long int read_meta_dec(std::ifstream& file, char* extension)
+{
+  long int key_starts = 0;
+  std::string meta;
+  file.seekg(0, std::ios::beg);
+  std::getline(file, meta);
+  char starts[meta.length()];
+  int i;
+
+  for (i = 0; meta[i] != ' '; ++i)
+    starts[i] = meta[i];
+  
+  starts[++i] = 0;
+
+  for (int k = 0; i < meta.length(); ++i, ++k)
+    extension[k] = meta[i];
+
+  extension[++i] = 0;
+  std::stringstream convert(starts);
+  convert >> key_starts;
+
+  return key_starts;
+}
+
+
+void crypting(const char* filename, const char* keyname, bool encrypt = true)
+{
+  std::streampos key_starts;
+  char extension[10];
+  char outname[strlen(filename)];
+  std::ifstream file (filename, std::ios::in|std::ios::binary|std::ios::ate);
+  std::ifstream key (keyname, std::ios::in|std::ios::binary|std::ios::ate);
+  if (!file.is_open() || !key.is_open())
+  {
+    put_error("Couldn't open input and/or key files.\n");
+  }
+  std::ofstream out;
+  if (encrypt)
+  {
+    change_extension(outname, filename, "enc", extension);
+    out.open(outname, std::ios::out|std::ios::binary);
+    key_starts = handle_meta_enc(file.tellg(), key.tellg(), keyname, out, extension);
+    file.seekg(0, std::ios::beg);
+  }
+  else
+  {
+    file.seekg(0, std::ios::beg);
+    key_starts = read_meta_dec(file, extension);
+    change_extension (outname, filename, extension);
+    out.open(outname, std::ios::out|std::ios::binary);
+  }
+  key.seekg(key_starts, std::ios::beg);
+  if (!out.is_open())
+  {
+    put_error("Couldn't open output file.\n");
+  }
+
+  char orig;
+  char code;
+  
+  while (file.read(&orig, 1))
+  {
+    key.read(&code, 1);
+    char res = orig ^ code;
+
+    out.write(&res, 1);
+  }
+}
 
 int main(int argc, char* argv[])
 {
-  string address = "";
-  char parameter;
-
-  for (int i = 1; i < argc; i++)
-  {
-    if (regex_match(argv[i], regex("(.*).txt)") ))
-    {
-      address = argv[i];
-      break;
-    }
-    else if (regex_match(argv[i], regex("-.")))
-      parameter = argv[i][1];
-  }
-
-  if (address == "")
-  {
-    cout << "No address was given\n";
-    exit(1);
-  }
-
-  switch (parameter)
+  if (argv[1][0] != '-')
+    put_error("A key should go first. For help use key '-h'.\n");
+  switch(argv[1][1])
   {
     case 'k':
-      create_key(address);
+      make_key(argv[2]);
       break;
+
     case 'e':
-      encrypt_file(address);
+      crypting(argv[2], argv[3]);
       break;
+
     case 'd':
-      decrypt_file(address);
+      crypting(argv[2], argv[3], false);
       break;
+
     default:
-      cout << "To encrypt your file you need to make a key first. Provide parameter '-k' and a file with any text as a base for the key.\n\nTo encrypt your file when you have a key you need to provide parameter '-e' and a file to be encrypted\n\nTo decrypt a file you need to provide parameter '-d' and a file to be decrypted. The key that was used for encryption should be in the same founder as the program itself, and it should be called 'key.eck'\n";
+      std::cout << "To make a key use '-k' and provide a file as a base for your key.\nTo encrypt a file use key '-e', provide the file to be encrypted, and lastly a key file.\nTo decode a file use '-d', provide file to be decypted and a key that was used for enryption.\n";
   }
-
-  return 0;
 }
-
