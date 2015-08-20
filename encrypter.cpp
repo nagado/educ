@@ -5,6 +5,7 @@
 #include <random>
 #include <sstream>
 
+using Byte = char;
 
 //=====put_error=====//
 void put_error(const std::string& error_message)
@@ -14,17 +15,16 @@ void put_error(const std::string& error_message)
 }
 
 //=====shuffle=====//
-
-void shuffle(std::vector<char>& input)
+void shuffle(std::vector<Byte>& input)
 {
   std::default_random_engine generator;
   std::uniform_int_distribution<int> distribution(0, input.size() - 1);
   int i = 0;
 
-  for (std::vector<char>::iterator iter = input.begin(); iter < input.end(); ++i, ++iter)
+  for (std::vector<Byte>::iterator iter = input.begin(); iter < input.end(); ++i, ++iter)
   {
     int random = distribution(generator);
-    char tmp = input[i];
+    Byte tmp = input[i];
     input[i] = input[random];
     input[random] = tmp;
   } 
@@ -34,8 +34,6 @@ void shuffle(std::vector<char>& input)
 std::string replace_extension(const std::string& filename, const std::string& new_extension)
 {
   int i;
-  std::string new_name;
-  std::string::const_iterator iter = new_extension.begin();
 
   for (i = 0; filename[i] != '.'; ++i);
 
@@ -43,7 +41,8 @@ std::string replace_extension(const std::string& filename, const std::string& ne
   if (filename[i] == '.')
     put_error("Oh, snap! Something went wrong.\n");
 
-  new_name = filename.substr(0, i + 1);
+  std::string new_name = filename.substr(0, i + 1);
+  std::string::const_iterator iter = new_extension.begin();
 
   for (int k = 0; iter < new_extension.end(); ++k, ++i, ++iter)
     new_name[i] = new_extension[k];
@@ -52,36 +51,32 @@ std::string replace_extension(const std::string& filename, const std::string& ne
 }
 
 //=====read_file=====//
-std::vector<char> read_file(const std::string& filename, const std::string error_message, std::streampos& size)
+std::vector<Byte> read_file(const std::string& filename, const std::string error_message, std::streampos& size)
 {
   std::ifstream file (filename, std::ios::in|std::ios::binary|std::ios::ate);
   size = file.tellg();
   if (!file.is_open())
-  {
-    file.close();
     put_error(error_message);
-  }
 
-  char inp[(long int)(size)];
+  Byte* inp = new Byte[(long int)(size)];
   file.seekg(0, std::ios::beg);
   file.read(inp, size);
   file.close();
-  std::vector<char> input(inp, inp + size);
+  std::vector<Byte> input(inp, inp + size);
+  delete inp;
 
   if (size == 0)
     put_error("Given file is empty\n");
 
-  return input;
+  return std::move(input);
 }
 
 //=====write_file=====//
-void write_file(const std::string& filename, std::vector<char> output, const std::string error_message, std::streampos& size)
+void write_file(const std::string& filename, std::vector<Byte> output, const std::string error_message, const std::streampos& size)
 {
   std::ofstream file (filename, std::ios::out|std::ios::binary|std::ios::trunc);
   if (!file.is_open())
-  {
     put_error(error_message);
-  }
   
   file.write(&output[0], size);
 }
@@ -90,7 +85,7 @@ void write_file(const std::string& filename, std::vector<char> output, const std
 void make_key(const std::string& filename)
 {
   std::streampos size;
-  std::vector<char> input = read_file(filename, "Couldn't access file-base for a key.\n", size);
+  std::vector<Byte> input = read_file(filename, "Couldn't access file-base for a key.\n", size);
   shuffle(input);
   std::string keyname = replace_extension(filename, "key");
   write_file(keyname, input, "Couldn't open file to save the result.\n", size);
@@ -99,23 +94,20 @@ void make_key(const std::string& filename)
 //=====read_key_position=====//
 std::streampos read_key_position(const std::string keyname)
 {
-  std::streampos start = 0;
+  long int tmp = 0;
   std::ifstream meta (keyname + ".meta");
-  if (meta.is_open())
-  {
-    long int tmp = 0;
-    meta >> tmp;
-    start = tmp;
-  }
 
-  return start;
+  if (meta.is_open())
+    meta >> tmp;
+
+  return tmp;
 }
 
-//=====record_meta=====//
-void record_meta(const long int key_starts, const long int size_of_file, const std::string keyname, std::ofstream& out)
+//=====record_meta_to_both_files=====//
+void record_meta_to_both_files(const long int key_starts, const long int size_of_file, const std::string keyname, std::ofstream& out)
 {
-  std::ofstream meta (keyname + ".meta", std::ios::out|std::ios::trunc);
-  meta << key_starts + size_of_file;
+  std::ofstream meta_file (keyname + ".meta", std::ios::out|std::ios::trunc);
+  meta_file << key_starts + size_of_file;
 
   std::string tmp = std::to_string(key_starts) + "\n";
   out.write(tmp.c_str(), tmp.length());
@@ -148,7 +140,7 @@ void crypting(const std::string& filename, const std::string& keyname, bool encr
     key_starts = read_key_position(keyname);
     if ((long int)(key.tellg()) - key_starts + 1 < file.tellg())
       put_error("The key needs to be changed. There is not enough data to encrypt file safely.\n");
-    record_meta(key_starts, file.tellg(), keyname, out);
+    record_meta_to_both_files(key_starts, file.tellg(), keyname, out);
     file.seekg(0, std::ios::beg);
   }
   else
@@ -159,29 +151,25 @@ void crypting(const std::string& filename, const std::string& keyname, bool encr
   }
   key.seekg(key_starts, std::ios::beg);
   if (!out.is_open())
-  {
     put_error("Couldn't open output file.\n");
-  }
 
-  char orig;
-  
+  Byte orig;
   while (file.read(&orig, 1))
   {
-    char code;
+    Byte code;
     key.read(&code, 1);
-    char res = orig ^ code;
-
-    std::cout << orig << ' ' << code << ' ' << res << '\n';
+    Byte res = orig ^ code;
 
     out.write(&res, 1);
   }
 }
 
 //=====main=====//
-int main(int argc, char* argv[])
+int main(int argc, Byte* argv[])
 {
   if (argv[1][0] != '-')
     put_error("A key should go first. For help use key '-h'.\n");
+
   switch(argv[1][1])
   {
     case 'k':
