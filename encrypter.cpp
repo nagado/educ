@@ -1,5 +1,5 @@
 #include <iostream>
-#include <string.h>
+#include <string>
 #include <fstream>
 #include <ios>
 #include <random>
@@ -33,9 +33,9 @@ void shuffle(std::vector<Byte>& input)
 //=====replace_extension=====//
 std::string replace_extension(const std::string& filename, const std::string& new_extension)
 {
-  int i;
-
-  for (i = 0; filename[i] != '.'; ++i);
+  int i = filename.rfind('.');
+  if (i == -1)
+    put_error("A given file doesn't have an extension.\n");
 
   ++i;
   if (filename[i] == '.')
@@ -58,12 +58,10 @@ std::vector<Byte> read_file(const std::string& filename, const std::string error
   if (!file.is_open())
     put_error(error_message);
 
-  Byte* inp = new Byte[(long int)(size)];
+  std::vector<Byte> input(size);
   file.seekg(0, std::ios::beg);
-  file.read(inp, size);
+  file.read(&input[0], size);
   file.close();
-  std::vector<Byte> input(inp, inp + size);
-  delete inp;
 
   if (size == 0)
     put_error("Given file is empty\n");
@@ -94,7 +92,7 @@ void make_key(const std::string& filename)
 //=====read_key_position=====//
 std::streampos read_key_position(const std::string keyname)
 {
-  long int tmp = 0;
+  long tmp = 0;
   std::ifstream meta (keyname + ".meta");
 
   if (meta.is_open())
@@ -104,12 +102,12 @@ std::streampos read_key_position(const std::string keyname)
 }
 
 //=====record_meta_to_both_files=====//
-void record_meta_to_both_files(const long int key_starts, const long int size_of_file, const std::string keyname, std::ofstream& out)
+void record_meta_to_both_files(const long key_starts, const long size_of_file, const std::string keyname, std::ofstream& out)
 {
   std::ofstream meta_file (keyname + ".meta", std::ios::out|std::ios::trunc);
   meta_file << key_starts + size_of_file;
 
-  std::string tmp = std::to_string(key_starts) + "\n";
+  std::string tmp = "<encrypted> meta=" + std::to_string(key_starts) + "\n";
   out.write(tmp.c_str(), tmp.length());
 }
 
@@ -118,9 +116,35 @@ std::streampos read_meta(std::ifstream& file)
 {
   std::string tmp;
   std::getline(file, tmp);
-  std::streampos key_starts = std::stol (tmp, nullptr);
+  if (tmp.substr(0, 17) != "<encrypted> meta=")
+    put_error("A wrong file was given.\n");
 
-  return key_starts; 
+  return std::stol(tmp.substr(17, tmp.length())); 
+}
+
+//=====set_up_for_encrypting=====//
+void set_up_for_encrypting(
+    std::ofstream& out, const std::string& filename, std::streampos& key_starts, std::ifstream& file,
+    const std::string& keyname, std::ifstream& key)
+{
+  out.open(filename + ".enc", std::ios::out|std::ios::binary);
+
+  key_starts = read_key_position(keyname);
+  if ((long)(key.tellg()) - key_starts + 1 < file.tellg())
+    put_error("The key needs to be changed. There is not enough data to encrypt file safely.\n");
+
+  record_meta_to_both_files(key_starts, file.tellg(), keyname, out);
+  file.seekg(0, std::ios::beg);
+}
+
+//=====set_up_for_decrypting=====//
+void set_up_for_decrypting(
+    std::ofstream& out, const std::string& filename, std::streampos& key_starts, std::ifstream& file)
+{
+  file.seekg(0, std::ios::beg);
+  key_starts = read_meta(file);
+
+  out.open(filename.substr(0, filename.length() - 4), std::ios::out|std::ios::binary);
 }
 
 //=====crypting=====//
@@ -129,26 +153,19 @@ void crypting(const std::string& filename, const std::string& keyname, bool encr
   std::streampos key_starts;
   std::ifstream file (filename, std::ios::in|std::ios::binary|std::ios::ate);
   std::ifstream key (keyname, std::ios::in|std::ios::binary|std::ios::ate);
+
   if (!file.is_open() || !key.is_open())
   {
     put_error("Couldn't open input and/or key files.\n");
   }
+
   std::ofstream out;
+
   if (encrypt)
-  {
-    out.open(filename + ".enc", std::ios::out|std::ios::binary);
-    key_starts = read_key_position(keyname);
-    if ((long int)(key.tellg()) - key_starts + 1 < file.tellg())
-      put_error("The key needs to be changed. There is not enough data to encrypt file safely.\n");
-    record_meta_to_both_files(key_starts, file.tellg(), keyname, out);
-    file.seekg(0, std::ios::beg);
-  }
+    set_up_for_encrypting(out, filename, key_starts, file, keyname, key);
   else
-  {
-    file.seekg(0, std::ios::beg);
-    key_starts = read_meta(file);
-    out.open(filename.substr(0, filename.length() - 4), std::ios::out|std::ios::binary);
-  }
+    set_up_for_decrypting(out, filename, key_starts, file);
+
   key.seekg(key_starts, std::ios::beg);
   if (!out.is_open())
     put_error("Couldn't open output file.\n");
@@ -167,24 +184,31 @@ void crypting(const std::string& filename, const std::string& keyname, bool encr
 //=====main=====//
 int main(int argc, Byte* argv[])
 {
-  if (argv[1][0] != '-')
-    put_error("A key should go first. For help use key '-h'.\n");
-
-  switch(argv[1][1])
+  try
   {
-    case 'k':
-      make_key(argv[2]);
-      break;
+    if (argv[1][0] != '-')
+      put_error("A key should go first. For help use key '-h'.\n");
 
-    case 'e':
-      crypting(argv[2], argv[3]);
-      break;
+    switch(argv[1][1])
+    {
+      case 'k':
+        make_key(argv[2]);
+        break;
 
-    case 'd':
-      crypting(argv[2], argv[3], false);
-      break;
+      case 'e':
+        crypting(argv[2], argv[3]);
+        break;
 
-    default:
-      std::cout << "To make a key use '-k' and provide a file as a base for your key.\nTo encrypt a file use key '-e', provide the file to be encrypted, and lastly a key file.\nTo decode a file use '-d', provide file to be decypted and a key that was used for enryption.\n";
-  }
+      case 'd':
+        crypting(argv[2], argv[3], false);
+        break;
+
+      default:
+        std::cout << "To make a key use '-k' and provide a file as a base for your key.\nTo encrypt a file use key '-e', provide the file to be encrypted, and lastly a key file.\nTo decode a file use '-d', provide file to be decypted and a key that was used for enryption.\n";
+    }
+ }
+  catch(const std::exception& e)
+  {
+    std::cerr << "Exception: " << e.what() << std::endl;    
+  }  
 }
