@@ -5,6 +5,7 @@
 #include <random>
 #include <sstream>
 #include <utility>
+#include <iterator>
 
 using Byte = char;
 
@@ -34,7 +35,7 @@ void write_file(const std::string& filename, std::vector<Byte> output, const std
   if (!file.is_open())
     put_error(error_message);
   
-  file.write(&output[0], input.size());
+  file.write(&output[0], output.size());
 }
 
 //=====make_key=====//
@@ -42,7 +43,7 @@ void make_key(const std::string& filename)
 {
   std::ifstream file (filename);
   std::vector<Byte> input;
-  input.assign(std::istream_iterator<Byte>(file));
+  input.assign(std::istream_iterator<char>(file), std::istream_iterator<char>());
   shuffle(input);
   std::string keyname = filename + ".key";
   write_file(keyname, input, "Couldn't open file to save the result.\n");
