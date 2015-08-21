@@ -4,6 +4,7 @@
 #include <ios>
 #include <random>
 #include <sstream>
+#include <utility>
 
 using Byte = char;
 
@@ -17,16 +18,13 @@ void put_error(const std::string& error_message)
 //=====shuffle=====//
 void shuffle(std::vector<Byte>& input)
 {
-  std::default_random_engine generator;
-  std::uniform_int_distribution<int> distribution(0, input.size() - 1);
-  int i = 0;
+  std::default_random_engine gen;
 
+  int i = 0;
   for (std::vector<Byte>::iterator iter = input.begin(); iter < input.end(); ++i, ++iter)
   {
-    int random = distribution(generator);
-    Byte tmp = input[i];
-    input[i] = input[random];
-    input[random] = tmp;
+    std::uniform_int_distribution<int> dis(i, input.size() - 1);
+    std::swap(input[i], input[dis(gen)]);
   } 
 }
 
