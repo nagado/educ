@@ -20,32 +20,11 @@ void shuffle(std::vector<Byte>& input)
 {
   std::default_random_engine gen;
 
-  int i = 0;
-  for (std::vector<Byte>::iterator iter = input.begin(); iter < input.end(); ++i, ++iter)
+  for (std::vector<Byte>::iterator iter = input.begin(); iter < input.end(); ++iter)
   {
-    std::uniform_int_distribution<int> dis(i, input.size() - 1);
-    std::swap(input[i], input[dis(gen)]);
+    std::uniform_int_distribution<int> dis (0, std::distance(iter, input.end() - 1));
+    std::swap(*iter, *(iter + dis(gen)));
   } 
-}
-
-//=====replace_extension=====//
-std::string replace_extension(const std::string& filename, const std::string& new_extension)
-{
-  int i = filename.rfind('.');
-  if (i == -1)
-    put_error("A given file doesn't have an extension.\n");
-
-  ++i;
-  if (filename[i] == '.')
-    put_error("Oh, snap! Something went wrong.\n");
-
-  std::string new_name = filename.substr(0, i + 1);
-  std::string::const_iterator iter = new_extension.begin();
-
-  for (int k = 0; iter < new_extension.end(); ++k, ++i, ++iter)
-    new_name[i] = new_extension[k];
-
-  return new_name;
 }
 
 //=====read_file=====//
@@ -83,7 +62,7 @@ void make_key(const std::string& filename)
   std::streampos size;
   std::vector<Byte> input = read_file(filename, "Couldn't access file-base for a key.\n", size);
   shuffle(input);
-  std::string keyname = replace_extension(filename, "key");
+  std::string keyname = filename + ".key";
   write_file(keyname, input, "Couldn't open file to save the result.\n", size);
 }
 
