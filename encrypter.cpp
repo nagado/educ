@@ -27,43 +27,25 @@ void shuffle(std::vector<Byte>& input)
   } 
 }
 
-//=====read_file=====//
-std::vector<Byte> read_file(const std::string& filename, const std::string error_message, std::streampos& size)
-{
-  std::ifstream file (filename, std::ios::in|std::ios::binary|std::ios::ate);
-  size = file.tellg();
-  if (!file.is_open())
-    put_error(error_message);
-
-  std::vector<Byte> input(size);
-  file.seekg(0, std::ios::beg);
-  file.read(&input[0], size);
-  file.close();
-
-  if (size == 0)
-    put_error("Given file is empty\n");
-
-  return std::move(input);
-}
-
 //=====write_file=====//
-void write_file(const std::string& filename, std::vector<Byte> output, const std::string error_message, const std::streampos& size)
+void write_file(const std::string& filename, std::vector<Byte> output, const std::string error_message)
 {
   std::ofstream file (filename, std::ios::out|std::ios::binary|std::ios::trunc);
   if (!file.is_open())
     put_error(error_message);
   
-  file.write(&output[0], size);
+  file.write(&output[0], input.size());
 }
 
 //=====make_key=====//
 void make_key(const std::string& filename)
 {
-  std::streampos size;
-  std::vector<Byte> input = read_file(filename, "Couldn't access file-base for a key.\n", size);
+  std::ifstream file (filename);
+  std::vector<Byte> input;
+  input.assign(std::istream_iterator<Byte>(file));
   shuffle(input);
   std::string keyname = filename + ".key";
-  write_file(keyname, input, "Couldn't open file to save the result.\n", size);
+  write_file(keyname, input, "Couldn't open file to save the result.\n");
 }
 
 //=====read_key_position=====//
