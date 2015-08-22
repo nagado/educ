@@ -21,10 +21,10 @@ void shuffle(std::vector<Byte>& input)
 {
   std::default_random_engine gen;
 
-  for (std::vector<Byte>::iterator iter = input.begin(); iter < input.end(); ++iter)
+  for (size_t i = 0; i < input.size(); ++i)
   {
-    std::uniform_int_distribution<int> dis (0, std::distance(iter, input.end() - 1));
-    std::swap(*iter, *(iter + dis(gen)));
+    std::uniform_int_distribution<int> dis (i, input.size() - 1);
+    std::swap(input[i], input[dis(gen)]);
   } 
 }
 
@@ -41,8 +41,8 @@ void write_file(const std::string& filename, std::vector<Byte> output, const std
 //=====make_key=====//
 void make_key(const std::string& filename)
 {
-  std::ifstream file (filename);
   std::vector<Byte> input;
+  std::ifstream file (filename);
   input.assign(std::istream_iterator<char>(file), std::istream_iterator<char>());
   shuffle(input);
   std::string keyname = filename + ".key";
@@ -169,6 +169,9 @@ int main(int argc, Byte* argv[])
  }
   catch(const std::exception& e)
   {
-    std::cerr << "Exception: " << e.what() << std::endl;    
+    std::cerr << "Exception: " << e.what() << std::endl;  
+    exit(1);  
   }  
+
+  exit(0);
 }
