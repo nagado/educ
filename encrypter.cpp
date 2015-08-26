@@ -8,15 +8,17 @@
 #include <iterator>
 
 using Byte = char;
+const std::string mark = "<encrypted> meta=";
+const size_t mark_length = 17;
 
-//=====put_error=====//
+//===============//
 void put_error(const std::string& error_message)
 {
-  std::cout << error_message;
+  std::cerr << error_message;
   exit(1);
 }
 
-//=====shuffle=====//
+//===============//
 void shuffle(std::vector<Byte>& input)
 {
   std::default_random_engine gen;
@@ -28,7 +30,7 @@ void shuffle(std::vector<Byte>& input)
   } 
 }
 
-//=====write_file=====//
+//===============//
 void write_file(const std::string& filename, std::vector<Byte> output, const std::string error_message)
 {
   std::ofstream file (filename, std::ios::out|std::ios::binary|std::ios::trunc);
@@ -38,7 +40,7 @@ void write_file(const std::string& filename, std::vector<Byte> output, const std
   file.write(&output[0], output.size());
 }
 
-//=====make_key=====//
+//===============//
 void make_key(const std::string& filename)
 {
   std::vector<Byte> input;
@@ -52,16 +54,16 @@ void make_key(const std::string& filename)
 //=====read_key_position=====//
 std::streampos read_key_position(const std::string keyname)
 {
-  long tmp = 0;
+  long pos = 0;
   std::ifstream meta (keyname + ".meta");
 
   if (meta.is_open())
-    meta >> tmp;
+    meta >> pos;
 
-  return tmp;
+  return pos;
 }
 
-//=====record_meta_to_both_files=====//
+//===============//
 void record_meta_to_both_files(const long key_starts, const long size_of_file, const std::string keyname, std::ofstream& out)
 {
   std::ofstream meta_file (keyname + ".meta", std::ios::out|std::ios::trunc);
@@ -71,18 +73,18 @@ void record_meta_to_both_files(const long key_starts, const long size_of_file, c
   out.write(tmp.c_str(), tmp.length());
 }
 
-//=====read_meta=====//
+//===============//
 std::streampos read_meta(std::ifstream& file)
 {
-  std::string tmp;
-  std::getline(file, tmp);
-  if (tmp.substr(0, 17) != "<encrypted> meta=")
+  std::string pos;
+  std::getline(file, pos);
+  if (pos.substr(0, mark_length) != mark)
     put_error("A wrong file was given.\n");
 
-  return std::stol(tmp.substr(17, tmp.length())); 
+  return std::stol(pos.substr(mark_length, pos.length())); 
 }
 
-//=====set_up_for_encrypting=====//
+//===============//
 void set_up_for_encrypting(
     std::ofstream& out, const std::string& filename, std::streampos& key_starts, std::ifstream& file,
     const std::string& keyname, std::ifstream& key)
@@ -97,7 +99,7 @@ void set_up_for_encrypting(
   file.seekg(0, std::ios::beg);
 }
 
-//=====set_up_for_decrypting=====//
+//===============//
 void set_up_for_decrypting(
     std::ofstream& out, const std::string& filename, std::streampos& key_starts, std::ifstream& file)
 {
@@ -107,7 +109,7 @@ void set_up_for_decrypting(
   out.open(filename.substr(0, filename.length() - 4), std::ios::out|std::ios::binary);
 }
 
-//=====crypting=====//
+//===============//
 void crypting(const std::string& filename, const std::string& keyname, bool encrypt = true)
 {
   std::streampos key_starts;
@@ -115,9 +117,7 @@ void crypting(const std::string& filename, const std::string& keyname, bool encr
   std::ifstream key (keyname, std::ios::in|std::ios::binary|std::ios::ate);
 
   if (!file.is_open() || !key.is_open())
-  {
     put_error("Couldn't open input and/or key files.\n");
-  }
 
   std::ofstream out;
 
@@ -131,17 +131,17 @@ void crypting(const std::string& filename, const std::string& keyname, bool encr
     put_error("Couldn't open output file.\n");
 
   Byte orig;
-  while (file.read(&orig, 1))
+  while (file.get(orig))
   {
     Byte code;
-    key.read(&code, 1);
+    key.get(code);
     Byte res = orig ^ code;
 
-    out.write(&res, 1);
+    out.put(res);
   }
 }
 
-//=====main=====//
+//===============//
 int main(int argc, Byte* argv[])
 {
   try
@@ -169,8 +169,7 @@ int main(int argc, Byte* argv[])
  }
   catch(const std::exception& e)
   {
-    std::cerr << "Exception: " << e.what() << std::endl;  
-    exit(1);  
+    put_error("Exception: " + std::string(e.what()) + "\n");  
   }  
 
   exit(0);
