@@ -141,6 +141,20 @@ void crypting(const std::string& filename, const std::string& keyname, bool encr
   }
 }
 
+void when_piping(const std::string& keyword)
+{
+  char ch;
+  for(int i = 0;; ++i)
+  {
+    std::cin.get(ch);
+    if (std::cin.eof())
+      break;
+
+    std::cout << char(ch ^ keyword[i % keyword.length()]);
+  }
+}
+
+
 //===============//
 int main(int argc, Byte* argv[])
 {
@@ -161,6 +175,10 @@ int main(int argc, Byte* argv[])
 
       case 'd':
         crypting(argv[2], argv[3], false);
+        break;
+
+      case 'p':
+        when_piping(argv[2]);
         break;
 
       default:
