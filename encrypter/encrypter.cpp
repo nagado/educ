@@ -156,7 +156,7 @@ void when_piping(const std::string& keyword)
 
 
 //===============//
-int main(int argc, Byte* argv[])
+int main(int argc, char* argv[])
 {
   try
   {
