@@ -8,9 +8,9 @@ void BitCashier::add(const bool new_value)
   bits.push_back(new_value);
 }
 
-void BitCashier::add(const Byte future_bits)  
+void BitCashier::add(const int future_bits, int num)  
 {
-  for (int i = byte_length - 1; i >= 0; --i)
+  for (int i = num - 1; i >= 0; --i)
     bits.push_back(bool(future_bits & (1 << i)));
 }   
   
@@ -39,12 +39,13 @@ bool BitCashier::pop()
   return result;
 }
 
-Byte BitCashier::pop_byte()
+int BitCashier::pop_bits(const int bits)
 {
-  Byte byte = 0;
+  if (bits > 32) put_error_and_exit("Can read only from 1 to 32 bits using function pop_bits()\n");
+  int result = 0;
 
-  for(int i = byte_length - 1; i >= 0; --i)
-    byte = byte | (pop() << i);
+  for (int i = bits - 1; i >= 0; --i)
+    result = result | (pop() << i);
 
-  return byte;
+  return result;
 }

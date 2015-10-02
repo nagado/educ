@@ -1,15 +1,14 @@
 class BitCashier
 {
   std::deque<bool> bits;
-  const int byte_length = 8;
 
 public:
   BitCashier(){}
 
   void add(const bool);
-  void add(const Byte);
+  void add(const int, int num = 8);
   int size();
   bool read_not_pop();
   bool pop();
-  Byte pop_byte();
+  int pop_bits(const int bits = 8);
 };

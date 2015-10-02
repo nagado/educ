@@ -22,8 +22,8 @@ void OffsetAndLength::set_offset(int offs, bool compressed)
 
 void OffsetAndLength::set_length(int len, bool compressed) 
 {
-  if ((!compressed && (len < 1 || len > 256)) || (compressed && (len < 0 || len > 255)))
-    put_error_and_exit("There is no length that is beyond [1, 256].\n");
+  if ((!compressed && (len < 1 || len > max_match_length)) || (compressed && (len < 0 || len > max_match_length - 1)))
+    put_error_and_exit("There is no length that is beyond [1, 16].\n");
 
   if (compressed)
     length = len;
@@ -33,10 +33,10 @@ void OffsetAndLength::set_length(int len, bool compressed)
 
 Byte OffsetAndLength::get_offset(bool compressed)
 {
-  if (compressed)
-    return offset;
-  else
+  if (!compressed)
     put_error_and_exit("Incorrect use of get_length()\n"); 
+
+  return offset;
 }
  
 int OffsetAndLength::get_offset()
@@ -46,10 +46,10 @@ int OffsetAndLength::get_offset()
 
 Byte OffsetAndLength::get_length(bool compressed)
 {
-  if (compressed)
-    return length;
-  else
+  if (!compressed)
     put_error_and_exit("Incorrect use of get_length()\n"); 
+
+  return length;
 }
 
 int OffsetAndLength::get_length()
