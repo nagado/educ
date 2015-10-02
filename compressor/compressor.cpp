@@ -1,26 +1,16 @@
-#include <string>
 #include <fstream>
 #include <deque>
-#include <iostream>
-#include "Bit_cashier.cpp"
-//Solve the issue with weird representation of first bytes in a text file
-//
-const int window_width = 510;//Won't work if more
-const int byte_length = 8;
-const int encoded_length = 17;
-const int untouched_length = 9;
-using Byte = char;
+#include "compressor.h"
+#include "BitCashier.h"
+#include "OffsetAndLength.h"
+#include <iostream>//
 
-
-void put_error_and_exit(const std::string& message)
-{
-  std::cerr << message;
-  exit(1);
-}
+//Make length shorter(32/16 bytes length - 4-5 bites to record)
+//let the bits record themselves
 
 int slide_window(int index, std::deque<Byte>& window, std::ifstream& in, std::streampos& end_of_file)
 {
-  while (index > window.size() / 2 && window.size() > 255)
+  while (index > window.size() / 2 && window.size() > window_width / 2)
  {
     if (in.tellg() < end_of_file)
     {
@@ -38,11 +28,9 @@ int slide_window(int index, std::deque<Byte>& window, std::ifstream& in, std::st
   return index;
 }
 
-bool find_a_match(std::deque<Byte>& window, int i, int* offset_and_length)
+bool find_a_match(std::deque<Byte>& window, int i, OffsetAndLength& off_len)
 {
   int start = 0;
-  offset_and_length[0] = 0;
-  offset_and_length[1] = 0;
   bool checking = false;
 
   for (int k = 0; k < i; ++k)
@@ -55,19 +43,17 @@ bool find_a_match(std::deque<Byte>& window, int i, int* offset_and_length)
     else if (checking == true && (window.size() == i + k - start || window[k] != window[i + k - start]))
     {
       checking = false;
-
-      if (offset_and_length[1] < k - start)
-      {
-        offset_and_length[0] = i - start;
-        offset_and_length[1] = k - start;
-      }
+      if (off_len.get_length() < k - start)
+        off_len.set(i - start, k - start);
 
       k = start + 1;
       start = 0;
     }
   }
 
-  if (offset_and_length[1] > 2)
+  if (off_len.get_offset() == 0) put_error_and_exit("Offset is impossible\n");//
+
+  if (off_len.get_length() > 1)
     return true;
   else
     return false;
@@ -81,7 +67,7 @@ void compressor(const std::string& filename)
   in.seekg(0, std::ios::beg);
 
   std::deque<Byte> window;
-  Bit_cashier bits;
+  BitCashier bits;
   
   for (int i = 0; i < window_width && in.tellg() < end_of_file; ++i)
     window.push_back(in.get());
@@ -89,19 +75,21 @@ void compressor(const std::string& filename)
   for (int i = 0; i < window.size(); ++i)
   {
     i = slide_window(i, window, in, end_of_file);
-    int offset_and_length[2];
+    OffsetAndLength off_len;
 
-    if (find_a_match(window, i, offset_and_length))
+    if (find_a_match(window, i, off_len))
     {
       bits.add(true);
-      bits.add(char(offset_and_length[0]));
-      bits.add(char(offset_and_length[1]));
-      i += offset_and_length[1] - 1;
+      //std::cout << "<" << off_len.get_offset() << "," << off_len.get_length() << ">";//
+      bits.add(off_len.get_offset(true));
+      bits.add(off_len.get_length(true));
+      i += off_len.get_length() - 1;
     }
     else
     {
       bits.add(false);
-      bits.add(window[i]);
+      //std::cout << char(window[i]);//
+      bits.add((window[i]));
     }
 
     while (bits.size() >= byte_length)
@@ -115,16 +103,6 @@ void compressor(const std::string& filename)
     out.put(bits.pop_byte());
 }
 
-int decode_char(char ch)
-{
-  int res = ch;
-
-  if (res < 0)
-    res += 256;
-
-  return res;
-}
-
 void decompressor(const std::string& filename)
 {
   std::ifstream in (filename, std::ios::in|std::ios::binary|std::ios::ate);
@@ -133,32 +111,36 @@ void decompressor(const std::string& filename)
   in.seekg(0, std::ios::beg);
 
   std::deque<Byte> window;
-  Bit_cashier bits;
-  
+  BitCashier bits;
+
   while (in.tellg() < end_of_file)
   {
-    bits.add(char(in.get()));
-    
+    bits.add(Byte(in.get()));
     if(bits.read_not_pop() && bits.size() >= encoded_length)
     {
       bits.pop();
-      int best_offset = decode_char(bits.pop_byte());
-      int best_length = decode_char(bits.pop_byte());
- 
-      for (int i = 0; i < best_length; ++i)
+      OffsetAndLength off_len;
+      off_len.set_offset(bits.pop_byte(), true);
+      off_len.set_length(bits.pop_byte(), true);
+      //std::cerr << "<" << off_len.get_offset() << ", " << off_len.get_length() << ">";//
+
+      for (int i = 0; i < off_len.get_length(); ++i)
       {
-        out.put(window[window.size() - best_offset]);
-        window.push_back(window[window.size() - best_offset]);
+        int index = window.size() - off_len.get_offset();
+        if (index >= window.size() || index < 0) put_error_and_exit("Index is out of range.\n");
+        out.put(window[index]);
+        window.push_back(window[index]);
       }
     }  
     else if (!bits.read_not_pop() && bits.size() >= untouched_length)
     {
       bits.pop();
-      char byte = bits.pop_byte();
+      Byte byte = bits.pop_byte();
+      //std::cout << char(byte);//
       out.put(byte);
       window.push_back(byte);
     }
- 
+    
     while (window.size() > window_width / 2)
       window.pop_front();
   }
@@ -171,6 +153,8 @@ int main(int argc, char** argv)
     compressor(argv[1]);
   else if (argc == 3)
     decompressor(argv[1]);
+
+  std::cerr << "Program ended\n";
 
   exit(0);
 }
