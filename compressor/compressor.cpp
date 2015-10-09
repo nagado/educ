@@ -40,15 +40,27 @@ bool find_a_match(const std::deque<Config::Byte>& window, const unsigned i, Offs
       checking = true;
       start = k;
     }
-    else if (checking == true && (window.size() == i + k - start || window[k] != window[i + k - start] || k - start == Config::max_match_length))
+    else if (checking == true && (window[k] != window[i + k - start] || k - start == Config::max_match_length))
     {
       checking = false;
       if (unsigned(off_len.get_length()) < k - start)
         off_len.set(i - start, k - start);
 
       if (off_len.get_length() == Config::max_match_length)
-        break;      
+        break;   
+  
+      k = start + 1;
+      start = 0;
+    }
+    else if (checking == true && ((k + 1 == i && window[k] == window[i + k - start]) || window.size() - 1 == i + k - start))
+    {
+      checking = false;
+      if (unsigned(off_len.get_length()) < k - start + 1)
+        off_len.set(i - start, k - start + 1);
 
+      if (off_len.get_length() == Config::max_match_length)
+        break;   
+  
       k = start + 1;
       start = 0;
     }
@@ -65,15 +77,15 @@ int write_result(bool match_found, std::ofstream& out, std::deque<Config::Byte>&
   if (match_found)
   {
     bits.add_bit(true);
-    std::cout << "<" << off_len.get_offset() << "," << off_len.get_length() << ">";//
+    //std::cout << "<" << off_len.get_offset() << "," << off_len.get_length() << ">";//
     bits.add_bits(off_len.get_offset(true));
     bits.add_bits(off_len.get_length(true), Config::encoded_len);
-    index += off_len.get_length() - 1;//Should not have a minus?????
+    index += off_len.get_length() - 1;
   }
   else
   {
     bits.add_bit(false);
-    std::cout << char(window[index]);//
+    //std::cout << char(window[index]);//
     bits.add_bits((window[index]));
   }
 
