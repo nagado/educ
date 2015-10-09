@@ -1,15 +1,13 @@
 class OffsetAndLength{
-  Byte offset;
-  Byte length;
+  Config::Byte offset;
+  Config::Byte length;
 
 public:
   OffsetAndLength(){ offset = 0; length = 0;}
 
   void set(int offs, int len, bool compressed = false);
-  void set_offset(int offs, bool compressed = false);
-  void set_length(int len, bool compressed = false);
-  Byte get_offset(bool compressed);
-  int get_offset();
-  Byte get_length(bool compressed);
-  int get_length();
+  Config::Byte get_offset(bool compressed);
+  inline int get_offset() { return int(offset) + 1; } 
+  Config::Byte get_length(bool compressed);
+  inline int get_length() { return int(length) + 1; };
 };
