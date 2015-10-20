@@ -3,7 +3,6 @@
 #include "compressor.h"
 #include "BitCashier.h"
 #include "OffsetAndLength.h"
-#include <iostream>//
 
 
 int slide_window(unsigned index, std::deque<Config::Byte>& window, std::ifstream& in)
@@ -77,7 +76,6 @@ int write_result(bool match_found, std::ofstream& out, std::deque<Config::Byte>&
   if (match_found)
   {
     bits.add_bit(true);
-    //std::cout << "<" << off_len.get_offset() << "," << off_len.get_length() << ">";//
     bits.add_bits(off_len.get_offset(true));
     bits.add_bits(off_len.get_length(true), Config::encoded_len);
     index += off_len.get_length() - 1;
@@ -85,7 +83,6 @@ int write_result(bool match_found, std::ofstream& out, std::deque<Config::Byte>&
   else
   {
     bits.add_bit(false);
-    //std::cout << char(window[index]);//
     bits.add_bits((window[index]));
   }
 
@@ -196,8 +193,6 @@ int main(int argc, char** argv)
     compress(argv[1]);
   else if (argc == 3)
     decompress(argv[1]);
-
-  std::cerr << "Program ended\n";
 
   exit(0);
 }
