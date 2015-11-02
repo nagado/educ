@@ -3,6 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 #include "Ball.h"
+#include "Racquet.h"
 
 
 class Game
@@ -10,16 +11,18 @@ class Game
   sf::RectangleShape line_top;
   sf::RectangleShape line_left;
   sf::RectangleShape line_right;
-  sf::RectangleShape racquet;//replace all Shapes with things, shapes should be inside.
+  Racquet racquet;//replace all Shapes with things, shapes should be inside.
   Ball ball;
 
 public:
   Game(sf::RenderWindow& window);
 
-  void update();
+  //wait for the player
+  //void setScene(sf::RenderWindow& window)
+  void update(const sf::RenderWindow& window);
   bool isOver();
   void show(sf::RenderWindow& window);
-  void showGameOver(sf::RenderWindow& window);
+  void showGameOver(sf::RenderWindow& window);//make that real
 };
 
 #endif

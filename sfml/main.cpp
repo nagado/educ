@@ -19,7 +19,7 @@ int main()
     }
     else
     {
-      game.update();
+      game.update(window);
       game.show(window);
     }
   }
