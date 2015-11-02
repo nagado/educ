@@ -1,16 +1,17 @@
 #include <SFML/Graphics.hpp>
 #include "Utils.h"
 #include "Game.h"
+#include <iostream>//
 
 
 int main()
 {
   sf::RenderWindow window(sf::VideoMode(Utils::window_x, Utils::window_y), "Squash Game", sf::Style::Titlebar|sf::Style::Close);
+  Game game;
 
   while (window.isOpen())
   {
     sf::Event event;
-    Game game;
 
     while (window.pollEvent(event))
     {
@@ -18,7 +19,9 @@ int main()
         window.close();
     }
 
+    game.update();
     game.show(window);
+
   }
 
   return 0;
