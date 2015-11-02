@@ -14,10 +14,12 @@ class Game
   Ball ball;
 
 public:
-  Game();
+  Game(sf::RenderWindow& window);
 
   void update();
+  bool isOver();
   void show(sf::RenderWindow& window);
+  void showGameOver(sf::RenderWindow& window);
 };
 
 #endif

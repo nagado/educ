@@ -1,13 +1,14 @@
+#include <SFML/Graphics.hpp>
+#include <cmath>
 #include "Game.h"
 #include "Utils.h"
 #include "Ball.h"
-#include <SFML/Graphics.hpp>
-#include <iostream>//
-#include <cmath>
 
-Game::Game() 
+Game::Game(sf::RenderWindow& window) 
 {
   using namespace Utils;
+
+  sf::Mouse::setPosition(sf::Vector2i(int(window_x / 2), int(window_y * catchline_y)), window);
 
   line_top.setSize(sf::Vector2f(window_x, line_w));
   line_left.setSize(sf::Vector2f(window_y, line_w));
@@ -45,4 +46,15 @@ void Game::show(sf::RenderWindow& window)
   window.display();
 } 
 
+bool Game::isOver()
+{
+  if (ball.getPosition().y > Utils::window_y)
+    return true;
+  else
+    return false;
+}
 
+void Game::showGameOver(sf::RenderWindow& window)
+{
+  window.clear();
+}

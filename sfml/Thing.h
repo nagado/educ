@@ -8,8 +8,6 @@
 class Thing : public sf::Shape 
 {
 protected:
-  double x;
-  double y;
   bool movable;
   double speed;
   double angle;
@@ -18,7 +16,7 @@ protected:
 
 public:
   //inline virtual void updatePosition();
-  virtual void changePosition(int xx, int yy);
+  inline virtual void changePosition(int xx, int yy) { setPosition(xx, yy); };
   inline bool isMovable() { return movable; }
   inline void setMovable(bool mov) { movable = mov; }
   virtual unsigned getPointCount() const { return unsigned(1); }
@@ -28,7 +26,6 @@ public:
   inline void setSpeed(double s) { speed = s; }
   inline double getSpeed() { return speed; }
   virtual void draw(sf::RenderTarget& target) const {};
-  void checkPosition();
 
   ~Thing() {}
 };

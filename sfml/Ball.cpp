@@ -3,7 +3,6 @@
 #include "TextException.h"
 #include <cmath>
 #include "Ball.h"
-#include <iostream>//
 
 
 void Ball::move()
@@ -16,9 +15,15 @@ void Ball::move()
   setPosition(round(x), round(y));
 }
 
+void Ball::changePosition(int xx, int yy)
+{
+  setPosition(xx, yy);
+  x = xx;
+  y = yy;
+}
+
 void Ball::updatePosition()
 {
-  checkPosition();
   move();
 }
 

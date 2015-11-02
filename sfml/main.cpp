@@ -7,22 +7,20 @@
 int main()
 {
   sf::RenderWindow window(sf::VideoMode(Utils::window_x, Utils::window_y), "Squash Game", sf::Style::Titlebar|sf::Style::Close);
-  Game game;
+
+  Game game(window);
 
   while (window.isOpen())
   {
-    sf::Event event;
-
-    while (window.pollEvent(event))
+    if (game.isOver())
     {
-      if (event.type == sf::Event::Closed)
+        game.showGameOver(window);
         window.close();
     }
-
-    game.update();
-    game.show(window);
-
+    else
+    {
+      game.update();
+      game.show(window);
+    }
   }
-
-  return 0;
 }

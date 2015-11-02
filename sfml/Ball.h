@@ -6,6 +6,8 @@
 
 class Ball : public Thing
 {
+  double x;
+  double y;
   int radius;
 
 public:
@@ -14,12 +16,14 @@ public:
   void updatePosition();
   inline void setRadius(int r) { radius = r; }
   inline int getRadius() { return radius; }
+  virtual void changePosition(int xx, int yy);
   virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
   
 
 private:
   void move();
-  void recalculateAngle(const Thing& obj);
+  //void recalculateAngle(const Thing& obj);
+
 };
 
 #endif
