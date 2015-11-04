@@ -18,7 +18,7 @@ public:
   Racquet() : Thing(false) {}
 
   inline void setDimentions(int l, int h) { length = l; height = h; }
-  inline sf::Vector2f getDimentions() { return sf::Vector2f(length, height); }
+  inline sf::Vector2f getDimentions() const { return sf::Vector2f(length, height); }
   virtual void changePosition(int xx, int yy);
   virtual void updatePosition(const sf::RenderWindow& window);
   virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;

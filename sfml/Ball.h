@@ -2,6 +2,7 @@
 #define BALL_H
 
 #include "Thing.h"
+#include "Racquet.h" 
 
 
 class Ball : public Thing
@@ -13,7 +14,7 @@ class Ball : public Thing
 public:
   Ball() : Thing(true) {};
 
-  void updatePosition();
+  void updatePosition(const Racquet& racquet);
   inline void setRadius(int r) { radius = r; }
   inline int getRadius() { return radius; }
   virtual void changePosition(int xx, int yy);
@@ -22,8 +23,10 @@ public:
 
 private:
   void move();
-  //void recalculateAngle(const Thing& obj);
-
+  void recalculateAngle(const Racquet& racquet);
+  bool racquetZone_x(const Racquet& racquet);
+  bool racquetZone_y(const Racquet& racquet);
+  double balanceAngle(double a);
 };
 
 #endif

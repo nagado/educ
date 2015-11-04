@@ -17,6 +17,8 @@ int main()
         game.showGameOver(window);
         window.close();
     }
+    else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+      window.close();
     else
     {
       game.update(window);

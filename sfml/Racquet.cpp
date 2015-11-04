@@ -2,8 +2,7 @@
 #include "Racquet.h"
 #include "Thing.h"
 #include "Utils.h"
-#include <ctime>
-#include <cmath>
+#include <math.h>
 
 
 void Racquet::changePosition(int xx, int yy)
@@ -28,9 +27,17 @@ void Racquet::updatePosition(const sf::RenderWindow& window)
     if (getPosition().x - old_x > 0)
       angle = 0;
     else
-      angle = 1;
+      angle = 1 * Utils::PI;
   
-    speed = abs(getPosition().x - old_x) / (std::clock() - old_time);
+    std::clock_t now = std::clock();
+
+    if (getPosition().x != old_x && now != old_time)
+    {
+      if (getPosition().x > old_x)
+        speed = (getPosition().x - old_x) / (std::clock() - old_time);
+      else
+        speed = (old_x - getPosition().x) / (std::clock() - old_time);
+    }
   }
 
   old_x = getPosition().x;
@@ -38,12 +45,12 @@ void Racquet::updatePosition(const sf::RenderWindow& window)
 
   int new_x = sf::Mouse::getPosition(window).x;
   
-  if (not (new_x < length / 2 || new_x > Utils::window_x - length / 2)) //left bond and right bond instead? think about it
-    setPosition(new_x, Utils::window_y * Utils::catchline_y);
-  else if (new_x < length / 2)
-    setPosition(length / 2, Utils::window_y * Utils::catchline_y);
+  if (not (new_x < Utils::left_wall_d + int(length / 2) || new_x > int(Utils::right_wall_d - length / 2)))
+    setPosition(new_x, Utils::catchline_y);
+  else if (new_x < Utils::left_wall_d + int(length / 2))
+    setPosition(Utils::left_wall_d + int(length / 2), Utils::catchline_y);
   else
-    setPosition(Utils::window_x - length / 2, Utils::window_y * Utils::catchline_y);
+    setPosition(Utils::right_wall_d - length / 2, Utils::catchline_y);
 
   old_time = std::clock();
 
