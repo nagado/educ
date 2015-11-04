@@ -4,13 +4,13 @@
 #include "Utils.h"
 #include <math.h>
 #include "Ball.h"
-#include <iostream>//
 
+//check that the speed is working, and that the recalculation happens only one in a hit. Add time calculation! Whoohoo
 
 void Ball::move()
 {
   if (angle > 2 * Utils::PI || angle < 0 * Utils::PI)
-    throw TextException("Unacceptable angle");
+    throw TextException("Unacceptable angle\n");
 
   x += speed * cos(angle);
   y -= speed * sin(angle);

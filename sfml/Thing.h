@@ -15,7 +15,6 @@ protected:
   Thing(bool mov) { movable = mov; }
 
 public:
-  //inline virtual void updatePosition();
   inline virtual void changePosition(int xx, int yy) { setPosition(xx, yy); };
   inline bool isMovable() const { return movable; }
   inline void setMovable(bool mov) { movable = mov; }

@@ -11,7 +11,7 @@ class Game
   sf::RectangleShape line_top;
   sf::RectangleShape line_left;
   sf::RectangleShape line_right;
-  Racquet racquet;//replace all Shapes with things, shapes should be inside.
+  Racquet racquet;
   Ball ball;
 
 public:
