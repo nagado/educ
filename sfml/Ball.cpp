@@ -105,6 +105,8 @@ double Ball::balanceAngle(double a)
 
 void Ball::recalculateAngle(const Racquet& racquet)
 {
+//make it impossible to have angle 0 or PI
+
   if (getPosition().y <= Utils::nozone_top)
     angle = 2 * Utils::PI - angle;
   else if (getPosition().x <= Utils::nozone_left || getPosition().x >= Utils::nozone_right)
@@ -130,6 +132,10 @@ void Ball::recalculateAngle(const Racquet& racquet)
 
       if (side <= 0)
         throw TextException("Side calculations are wrong\n");
+      if (angle == 0)
+        angle = 0.2 * Utils::PI;
+      if (angle == Utils::PI)
+        angle = 0.8 * Utils::PI;   
     }
   }
 }

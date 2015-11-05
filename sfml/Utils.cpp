@@ -18,8 +18,8 @@ int Utils::catchline_y = round(0.875 * window_y);
 
 int Utils::ball_r = round(0.025 * window_y);
 int Utils::ball_start_height = round(0.2 * window_y);
-double Utils::ball_speed = 1;
-double Utils::ball_angle = 1.5 * PI;
+double Utils::ball_speed = 5;
+double Utils::ball_angle = 0.40 * PI;
 
 int Utils::nozone_top = top_wall_d + line_w + ball_r;
 int Utils::nozone_left = left_wall_d + line_w + ball_r;

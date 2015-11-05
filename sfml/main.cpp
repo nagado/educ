@@ -10,7 +10,7 @@ int main()
 
   Game game(window);
 
-  while (window.isOpen())
+  while (window.isOpen())//let window close
   {
     if (game.isOver())
     {

@@ -34,9 +34,9 @@ void Racquet::updatePosition(const sf::RenderWindow& window)
     if (getPosition().x != old_x && now != old_time)
     {
       if (getPosition().x > old_x)
-        speed = (getPosition().x - old_x) / (std::clock() - old_time);
+        speed = 300 * (getPosition().x - old_x) / (std::clock() - old_time);
       else
-        speed = (old_x - getPosition().x) / (std::clock() - old_time);
+        speed = 300 * (old_x - getPosition().x) / (std::clock() - old_time);
     }
   }
 
