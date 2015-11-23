@@ -15,8 +15,8 @@ public:
   Ball() : Thing(true) {};
 
   void updatePosition(const Racquet& racquet);
-  inline void setRadius(int r) { radius = r; }
-  inline int getRadius() { return radius; }
+  void setRadius(int r) { radius = r; }
+  int getRadius() { return radius; }
   virtual void changePosition(int xx, int yy);
   virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
   
