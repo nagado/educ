@@ -11,7 +11,7 @@ class TextException : public std::exception
 public:
   TextException(std::string text) { message = text; }
 
-  const char* what() { return message.c_str(); }
+  const char* what() const throw() { return message.c_str(); }
 };
 
 #endif

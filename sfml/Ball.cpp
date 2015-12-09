@@ -4,8 +4,7 @@
 #include "Utils.h"
 #include <math.h>
 #include "Ball.h"
-
-//check that the speed is working, and that the recalculation happens only one in a hit. Add time calculation! Whoohoo
+#include <iostream>//
 
 void Ball::move()
 {
@@ -39,10 +38,10 @@ void Ball::draw(sf::RenderTarget& target, sf::RenderStates states) const
   int yy = radius;
   std::vector<sf::Vertex> vertices;
 
-  vertices.push_back(sf::Vertex(sf::Vector2f(round(x), round(y) + radius)));
-  vertices.push_back(sf::Vertex(sf::Vector2f(round(x), round(y) - radius)));
-  vertices.push_back(sf::Vertex(sf::Vector2f(round(x) - radius, round(y))));  
-  vertices.push_back(sf::Vertex(sf::Vector2f(round(x) + radius, round(y))));
+  std::vector<std::vector<double>> vars_list {{0, radius}, {0, -radius}, { -radius, 0}, {radius, 0}};
+
+  for (std::vector<double> vars : vars_list)
+    vertices.push_back(sf::Vertex(sf::Vector2f(round(x) + vars[0], round(y) + vars[1])));
 
   while(xx < yy)
   {
@@ -57,16 +56,11 @@ void Ball::draw(sf::RenderTarget& target, sf::RenderStates states) const
     ddF_x += 2; 
     f += ddF_x; 
 
-    vertices.push_back(sf::Vertex(sf::Vector2f(round(x) + xx, round(y) + yy)));
-    vertices.push_back(sf::Vertex(sf::Vector2f(round(x) - xx, round(y) + yy)));
-    vertices.push_back(sf::Vertex(sf::Vector2f(round(x) + xx, round(y) - yy)));  
-    vertices.push_back(sf::Vertex(sf::Vector2f(round(x) - xx, round(y) - yy)));
-    vertices.push_back(sf::Vertex(sf::Vector2f(round(x) + yy, round(y) + xx)));
-    vertices.push_back(sf::Vertex(sf::Vector2f(round(x) - yy, round(y) + xx)));
-    vertices.push_back(sf::Vertex(sf::Vector2f(round(x) + yy, round(y) - xx)));  
-    vertices.push_back(sf::Vertex(sf::Vector2f(round(x) - yy, round(y) - xx)));
+    std::vector<std::vector<double>> vars_list2 {{round(x) + xx, round(y) + yy}, {round(x) - xx, round(y) + yy}, {round(x) + xx, round(y) - yy}, {round(x) - xx, round(y) - yy},
+                                                {round(x) + yy, round(y) + xx}, {round(x) - yy, round(y) + xx}, {round(x) + yy, round(y) - xx}, {round(x) - yy, round(y) - xx}};
 
-  
+    for (std::vector<double> vars2 : vars_list2)
+      vertices.push_back(sf::Vertex(sf::Vector2f(vars2[0], vars2[1])));
   }
 
   target.draw(&vertices[0], vertices.size(), sf::TrianglesFan);
@@ -94,23 +88,25 @@ bool Ball::racquetZone_y(const Racquet& racquet)
 
 double Ball::balanceAngle(double a)
 {
-  while (a < 0)
+  std::cerr << "BEF " << a << "\n";//
+  a = a - 2 * Utils::PI * int(a / (2 * Utils::PI));
+
+  if (a < 0)
     a += 2 * Utils::PI;
 
-  while (a > 2 * Utils::PI)
-    a -= 2 * Utils::PI;
+  std::cerr << "AFT " << a << "\n";//
 
   return a;
 }
 
 void Ball::recalculateAngle(const Racquet& racquet)
 {
-//make it impossible to have angle 0 or PI
-
   if (getPosition().y <= Utils::nozone_top)
-    angle = 2 * Utils::PI - angle;
+    angle = 2 * Utils::PI - angle; 
+
   else if (getPosition().x <= Utils::nozone_left || getPosition().x >= Utils::nozone_right)
     angle = balanceAngle(1 * Utils::PI - angle);
+
   else if (racquetZone_y(racquet) && racquetZone_x(racquet))
   {
     angle = 2 * Utils::PI - angle;
@@ -132,8 +128,10 @@ void Ball::recalculateAngle(const Racquet& racquet)
 
       if (side <= 0)
         throw TextException("Side calculations are wrong\n");
+
       if (angle == 0)
         angle = 0.2 * Utils::PI;
+
       if (angle == Utils::PI)
         angle = 0.8 * Utils::PI;   
     }
