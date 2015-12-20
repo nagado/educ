@@ -4,7 +4,6 @@
 #include "Utils.h"
 #include <math.h>
 #include "Ball.h"
-#include <iostream>//
 
 void Ball::move()
 {
@@ -38,9 +37,9 @@ void Ball::draw(sf::RenderTarget& target, sf::RenderStates states) const
   int yy = radius;
   std::vector<sf::Vertex> vertices;
 
-  std::vector<std::vector<double>> vars_list {{0, radius}, {0, -radius}, { -radius, 0}, {radius, 0}};
+  std::vector<std::vector<int>> vars_list {{0, radius}, {0, -radius}, { -radius, 0}, {radius, 0}};
 
-  for (std::vector<double> vars : vars_list)
+  for (std::vector<int> vars : vars_list)
     vertices.push_back(sf::Vertex(sf::Vector2f(round(x) + vars[0], round(y) + vars[1])));
 
   while(xx < yy)
@@ -56,10 +55,12 @@ void Ball::draw(sf::RenderTarget& target, sf::RenderStates states) const
     ddF_x += 2; 
     f += ddF_x; 
 
-    std::vector<std::vector<double>> vars_list2 {{round(x) + xx, round(y) + yy}, {round(x) - xx, round(y) + yy}, {round(x) + xx, round(y) - yy}, {round(x) - xx, round(y) - yy},
-                                                {round(x) + yy, round(y) + xx}, {round(x) - yy, round(y) + xx}, {round(x) + yy, round(y) - xx}, {round(x) - yy, round(y) - xx}};
+    std::vector<std::vector<int>> vars_list2 {{int(round(x)) + xx, int(round(y)) + yy}, {int(round(x)) - xx, int(round(y)) + yy}, 
+                                              {int(round(x)) + xx, int(round(y)) - yy}, {int(round(x)) - xx, int(round(y)) - yy},
+                                              {int(round(x)) + yy, int(round(y)) + xx}, {int(round(x)) - yy, int(round(y)) + xx}, 
+                                              {int(round(x)) + yy, int(round(y)) - xx}, {int(round(x)) - yy, int(round(y)) - xx}};
 
-    for (std::vector<double> vars2 : vars_list2)
+    for (std::vector<int> vars2 : vars_list2)
       vertices.push_back(sf::Vertex(sf::Vector2f(vars2[0], vars2[1])));
   }
 
@@ -88,13 +89,10 @@ bool Ball::racquetZone_y(const Racquet& racquet)
 
 double Ball::balanceAngle(double a)
 {
-  std::cerr << "BEF " << a << "\n";//
   a = a - 2 * Utils::PI * int(a / (2 * Utils::PI));
 
   if (a < 0)
     a += 2 * Utils::PI;
-
-  std::cerr << "AFT " << a << "\n";//
 
   return a;
 }
