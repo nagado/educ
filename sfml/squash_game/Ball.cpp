@@ -36,11 +36,11 @@ void Ball::draw(sf::RenderTarget& target, sf::RenderStates states) const
   int xx = 0;
   int yy = radius;
   std::vector<sf::Vertex> vertices;
+  const int vars_count = 4;
+  int vars[vars_count][2] {{0, radius}, {0, -radius}, { -radius, 0}, {radius, 0}};
 
-  std::vector<std::vector<int>> vars_list {{0, radius}, {0, -radius}, { -radius, 0}, {radius, 0}};
-
-  for (std::vector<int> vars : vars_list)
-    vertices.push_back(sf::Vertex(sf::Vector2f(round(x) + vars[0], round(y) + vars[1])));
+  for (int i = 0; i < vars_count; i++)
+    vertices.push_back(sf::Vertex(sf::Vector2f(round(x) + vars[i][0], round(y) + vars[i][1])));
 
   while(xx < yy)
   {
@@ -55,13 +55,14 @@ void Ball::draw(sf::RenderTarget& target, sf::RenderStates states) const
     ddF_x += 2; 
     f += ddF_x; 
 
-    std::vector<std::vector<int>> vars_list2 {{int(round(x)) + xx, int(round(y)) + yy}, {int(round(x)) - xx, int(round(y)) + yy}, 
-                                              {int(round(x)) + xx, int(round(y)) - yy}, {int(round(x)) - xx, int(round(y)) - yy},
-                                              {int(round(x)) + yy, int(round(y)) + xx}, {int(round(x)) - yy, int(round(y)) + xx}, 
-                                              {int(round(x)) + yy, int(round(y)) - xx}, {int(round(x)) - yy, int(round(y)) - xx}};
+    const int vars2_count = 8;
+    int vars2[vars2_count][2] {{int(round(x)) + xx, int(round(y)) + yy}, {int(round(x)) - xx, int(round(y)) + yy}, 
+                               {int(round(x)) + xx, int(round(y)) - yy}, {int(round(x)) - xx, int(round(y)) - yy},
+                               {int(round(x)) + yy, int(round(y)) + xx}, {int(round(x)) - yy, int(round(y)) + xx}, 
+                               {int(round(x)) + yy, int(round(y)) - xx}, {int(round(x)) - yy, int(round(y)) - xx}};
 
-    for (std::vector<int> vars2 : vars_list2)
-      vertices.push_back(sf::Vertex(sf::Vector2f(vars2[0], vars2[1])));
+    for (int i = 0; i < vars2_count; i++)
+      vertices.push_back(sf::Vertex(sf::Vector2f(vars2[i][0], vars2[i][1])));
   }
 
   target.draw(&vertices[0], vertices.size(), sf::TrianglesFan);
