@@ -8,6 +8,7 @@
 
 class Game
 {
+//make Wall class, then put all objects in a vector
   sf::RectangleShape line_top;
   sf::RectangleShape line_left;
   sf::RectangleShape line_right;
@@ -17,8 +18,6 @@ class Game
 public:
   Game(sf::RenderWindow& window);
 
-  //wait for the player
-  //void setScene(sf::RenderWindow& window)
   void update(const sf::RenderWindow& window);
   bool isOver();
   void show(sf::RenderWindow& window);

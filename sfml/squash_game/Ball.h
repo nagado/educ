@@ -14,7 +14,7 @@ class Ball : public Thing
 public:
   Ball() : Thing(true) {};
 
-  void updatePosition(const Racquet& racquet);
+  void updatePosition(const Racquet& racquet);//no racquet
   void setRadius(int r) { radius = r; }
   int getRadius() { return radius; }
   virtual void changePosition(int xx, int yy);
@@ -24,7 +24,7 @@ public:
 private:
   void move();
   void recalculateAngle(const Racquet& racquet);
-  bool racquetZone_x(const Racquet& racquet);
+  bool racquetZone_x(const Racquet& racquet);//change to borders in public
   bool racquetZone_y(const Racquet& racquet);
   double balanceAngle(double a);
 };

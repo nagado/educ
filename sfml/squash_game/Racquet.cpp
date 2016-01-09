@@ -58,6 +58,8 @@ void Racquet::updatePosition(const sf::RenderWindow& window)
 
 void Racquet::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
+
+//make a vector of variables, add them instead of a whole "phrase"
   std::vector<sf::Vertex> vertices;
 
   vertices.push_back(sf::Vertex(sf::Vector2f(getPosition().x - length / 2, getPosition().y - height / 2)));
