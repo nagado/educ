@@ -18,16 +18,16 @@ public:
   virtual void changePosition(int xx, int yy) { setPosition(xx, yy); };
   bool isMovable() const { return movable; }
   void setMovable(bool mov) { movable = mov; }
-  virtual unsigned getPointCount() const { return unsigned(1); }//assert on a call
-  virtual sf::Vector2f getPoint(unsigned index) const {return sf::Vector2f(1, 2); }//assert on a call
+  unsigned getPointCount() const override { return unsigned(1); }//assert on a call
+  sf::Vector2f getPoint(unsigned index) const override{return sf::Vector2f(1, 2); }//assert on a call
   void setAngle(double a) { angle = a; }
   double getAngle() const { return angle; }
   void setSpeed(double s) { speed = s; }
   double getSpeed() const { return speed; }
-  virtual void draw(sf::RenderTarget& target) const {};
-  //virtual sf::Vector2f getBorders();
+  virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const = 0;//assert on a call;
+  virtual std::vector<std::vector<int>> getBorders() const = 0;//assert on a call;
 
-  ~Thing() {}
+  virtual ~Thing() {}
 };
 
 #endif

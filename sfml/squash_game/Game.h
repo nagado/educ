@@ -4,6 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include "Ball.h"
 #include "Racquet.h"
+#include "Wall.h"
 
 
 class Game

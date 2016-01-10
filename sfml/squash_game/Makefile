@@ -6,7 +6,7 @@ RMFLAGS = -f
 GFLAGS = -lsfml-graphics -lsfml-window -lsfml-system
 
 
-all: main.o Game.o Utils.o Ball.o Racquet.o main clean
+all: main.o Game.o Utils.o Ball.o Racquet.o Wall.o main clean
 
 main.o:
 	$(CC) -c $(TARGET).cpp $(CFLAGS)
@@ -23,8 +23,11 @@ Ball.o:
 Racquet.o:
 	$(CC) -c Racquet.cpp $(CFLAGS)
 
-main: main.o Game.o Utils.o Ball.o Racquet.o
-	$(CC) -o $(TARGET) $(TARGET).o Game.o Utils.o Ball.o Racquet.o $(GFLAGS)
+Wall.o:
+	$(CC) -c Wall.cpp $(CFLAGS)
+
+main: main.o Game.o Utils.o Ball.o Racquet.o Wall.o
+	$(CC) -o $(TARGET) $(TARGET).o Game.o Utils.o Ball.o Racquet.o Wall.o $(GFLAGS)
 
 clean:
 	$(RM) $(RMFLAGS) *.o

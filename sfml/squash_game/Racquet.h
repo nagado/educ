@@ -19,9 +19,12 @@ public:
 
   void setDimentions(int l, int h) { length = l; height = h; }
   sf::Vector2f getDimentions() const { return sf::Vector2f(length, height); }
-  virtual void changePosition(int xx, int yy);
+  void changePosition(int xx, int yy) override;
   void updatePosition(const sf::RenderWindow& window);
-  virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+  void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+  std::vector<std::vector<int>> getBorders() const override;
+
+  ~Racquet() override {};
 };
 
 #endif

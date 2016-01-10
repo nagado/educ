@@ -17,9 +17,11 @@ public:
   void updatePosition(const Racquet& racquet);//no racquet
   void setRadius(int r) { radius = r; }
   int getRadius() { return radius; }
-  virtual void changePosition(int xx, int yy);
-  virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+  void changePosition(int xx, int yy) override;
+  void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+  std::vector<std::vector<int>> getBorders() const override;
   
+  ~Ball() override {};
 
 private:
   void move();

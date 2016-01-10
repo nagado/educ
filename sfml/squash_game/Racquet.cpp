@@ -56,17 +56,22 @@ void Racquet::updatePosition(const sf::RenderWindow& window)
 
 }
 
+std::vector<std::vector<int>> Racquet::getBorders() const
+{
+  std::vector<std::vector<int>> borders {{int(getPosition().x - length / 2), int(getPosition().y - height / 2)}, 
+                                         {int(getPosition().x + length / 2), int(getPosition().y + height / 2)}};
+
+  return borders;
+}
+
 void Racquet::draw(sf::RenderTarget& target, sf::RenderStates states) const
 {
 
-//make a vector of variables, add them instead of a whole "phrase"
   std::vector<sf::Vertex> vertices;
+  std::vector<std::vector<int>> sign {{-1, -1}, {-1, 1}, {1, -1}, {1, 1}};
 
-  vertices.push_back(sf::Vertex(sf::Vector2f(getPosition().x - length / 2, getPosition().y - height / 2)));
-  vertices.push_back(sf::Vertex(sf::Vector2f(getPosition().x - length / 2, getPosition().y + height / 2)));
-  vertices.push_back(sf::Vertex(sf::Vector2f(getPosition().x + length / 2, getPosition().y - height / 2)));  
-  vertices.push_back(sf::Vertex(sf::Vector2f(getPosition().x + length / 2, getPosition().y + height / 2)));
-
+  for (unsigned i = 0; i < sign.size(); i++)
+    vertices.push_back(sf::Vertex(sf::Vector2f(getPosition().x + sign[i][0] * length / 2, getPosition().y + sign[i][1] * height / 2)));
 
   target.draw(&vertices[0], vertices.size(), sf::TrianglesStrip);
 }

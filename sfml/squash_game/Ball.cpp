@@ -98,6 +98,14 @@ double Ball::balanceAngle(double a)
   return a;
 }
 
+std::vector<std::vector<int>> Ball::getBorders() const
+{
+  std::vector<std::vector<int>> borders {{int(getPosition().x) - radius, int(getPosition().y) - radius}, 
+                                         {int(getPosition().x) + radius, int(getPosition().y) + radius}};
+
+  return borders;
+}
+
 void Ball::recalculateAngle(const Racquet& racquet)
 {
   if (getPosition().y <= Utils::nozone_top)
