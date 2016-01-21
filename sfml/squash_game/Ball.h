@@ -12,9 +12,10 @@ class Ball : public Thing
   int radius;
 
 public:
-  Ball() : Thing(true) {};
+  Ball(int xx, int yy, int rad, double ang, double spe) : Thing(true, true, ang, spe), radius(rad) { setPosition(xx, yy); x = xx; y = yy; }
 
-  void updatePosition(const Racquet& racquet);//no racquet
+  void updatePosition(const std::vector<std::vector<int>> thing_borders = {}, const int thing_speed = 0, const double thing_angle = 0) override;//no racquet
+  
   void setRadius(int r) { radius = r; }
   int getRadius() { return radius; }
   void changePosition(int xx, int yy) override;
@@ -24,11 +25,9 @@ public:
   ~Ball() override {};
 
 private:
-  void move();
-  void recalculateAngle(const Racquet& racquet);
-  bool racquetZone_x(const Racquet& racquet);//change to borders in public
-  bool racquetZone_y(const Racquet& racquet);
+  void recalculateAngle(const std::vector<std::vector<int>> thing_borders = std::vector<std::vector<int>>(), const int thing_speed = 0, const double thing_angle = 0);//get Vector of Vertex maybe?
   double balanceAngle(double a);
+  void move();
 };
 
 #endif

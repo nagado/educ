@@ -5,9 +5,10 @@
 #include <math.h>
 #include "Ball.h"
 
+
 void Ball::move()
 {
-  if (angle > 2 * Utils::PI || angle < 0 * Utils::PI)
+  if (angle > 2 * Utils::Pi || angle < 0 * Utils::Pi)
     throw TextException("Unacceptable angle\n");
 
   x += speed * cos(angle);
@@ -22,9 +23,10 @@ void Ball::changePosition(int xx, int yy)
   y = yy;
 }
 
-void Ball::updatePosition(const Racquet& racquet)
+void Ball::updatePosition(const std::vector<std::vector<int>> thing_borders, const int thing_speed, const double thing_angle)
 {
-  recalculateAngle(racquet);
+  if (thing_borders.size() != 0) 
+    recalculateAngle(thing_borders, thing_speed, thing_angle);
   move();
 }
 
@@ -68,32 +70,12 @@ void Ball::draw(sf::RenderTarget& target, sf::RenderStates states) const
   target.draw(&vertices[0], vertices.size(), sf::TrianglesFan);
 }
 
-bool Ball::racquetZone_x(const Racquet& racquet)
-{
-  int nozone_racquet_left = racquet.getPosition().x - racquet.getDimentions().x / 2 - radius;
-  int nozone_racquet_right = racquet.getPosition().x + racquet.getDimentions().x / 2 + radius;
-
-  if (getPosition().x >= nozone_racquet_left && getPosition().x <= nozone_racquet_right)
-    return true;
-  else
-    return false; 
-  
-}
-
-bool Ball::racquetZone_y(const Racquet& racquet)
-{
-  if (getPosition().y > Utils::nozone_catchline - int(speed) && getPosition().y <= Utils::nozone_catchline)
-    return true;
-  else
-    return false;  
-}
-
 double Ball::balanceAngle(double a)
 {
-  a = a - 2 * Utils::PI * int(a / (2 * Utils::PI));
+  a = a - 2 * Utils::Pi * int(a / (2 * Utils::Pi));
 
   if (a < 0)
-    a += 2 * Utils::PI;
+    a += 2 * Utils::Pi;
 
   return a;
 }
@@ -106,41 +88,52 @@ std::vector<std::vector<int>> Ball::getBorders() const
   return borders;
 }
 
-void Ball::recalculateAngle(const Racquet& racquet)
-{
-  if (getPosition().y <= Utils::nozone_top)
-    angle = 2 * Utils::PI - angle; 
 
-  else if (getPosition().x <= Utils::nozone_left || getPosition().x >= Utils::nozone_right)
-    angle = balanceAngle(1 * Utils::PI - angle);
-
-  else if (racquetZone_y(racquet) && racquetZone_x(racquet))
-  {
-    angle = 2 * Utils::PI - angle;
+void Ball::recalculateAngle(const std::vector<std::vector<int>> thing_borders, const int thing_speed, const double thing_angle)
+{ 
+  int start1 [] {thing_borders[0][0], thing_borders[0][1]};
+  int endOf1 [] {thing_borders[1][0], thing_borders[1][1]};
     
-    if (angle != racquet.getAngle() && racquet.getSpeed() != 0)
+  if (getPosition().y <= start1[1])
+  {
+    angle = 2 * Utils::Pi - angle;
+    
+    if (angle != thing_angle && thing_speed != 0)
     {
       double side = 0;
       
-      if (racquet.getAngle() == 0)
+      if (thing_angle == 0)
       {
-        side = sqrt(speed * speed + racquet.getSpeed() * racquet.getSpeed() - 2 * speed * racquet.getSpeed() * cos(Utils::PI - angle));
-        angle = acos((side * side + racquet.getSpeed() * racquet.getSpeed() - speed * speed) / (2 * side * racquet.getSpeed()));
+        side = sqrt(speed * speed + thing_speed * thing_speed - 2 * speed * thing_speed * cos(Utils::Pi - angle));
+        angle = acos((side * side + thing_speed * thing_speed - speed * speed) / (2 * side * thing_speed));
       }
       else
       {
-        side = sqrt(speed * speed + racquet.getSpeed() * racquet.getSpeed() - 2 * speed * racquet.getSpeed() * cos(angle));
-        angle = Utils::PI - acos((side * side + racquet.getSpeed() * racquet.getSpeed() - speed * speed) / (2 * side * racquet.getSpeed()));
+        side = sqrt(speed * speed + thing_speed * thing_speed - 2 * speed * thing_speed * cos(angle));
+        angle = Utils::Pi - acos((side * side + thing_speed * thing_speed - speed * speed) / (2 * side * thing_speed));
       }
 
       if (side <= 0)
-        throw TextException("Side calculations are wrong\n");
+        throw TextException("Side calculations are uncorrect\n");  
 
       if (angle == 0)
-        angle = 0.2 * Utils::PI;
+        angle = 0.1 * Utils::Pi;
 
-      if (angle == Utils::PI)
-        angle = 0.8 * Utils::PI;   
+      if (angle == Utils::Pi)
+        angle = 0.9 * Utils::Pi;
     }
   }
+
+  else if (getPosition().y >= endOf1[1] and angle <= Utils::Pi)
+      angle = 2 * Utils::Pi - angle; 
+
+  else
+    angle = balanceAngle(1 * Utils::Pi - angle);
+
+
+   if (angle == 0)
+     angle = 1.1 * Utils::Pi;
+
+   if (angle == Utils::Pi)
+     angle = 1.9 * Utils::Pi;
 }

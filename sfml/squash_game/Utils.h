@@ -4,7 +4,7 @@
 
 namespace Utils
 {
-  extern const double PI;
+  extern const double Pi;
 
   extern unsigned window_x;
   extern unsigned window_y;

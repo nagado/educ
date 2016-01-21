@@ -15,7 +15,7 @@ void Racquet::changePosition(int xx, int yy)
   setPosition(xx, yy);
 }
 
-void Racquet::updatePosition(const sf::RenderWindow& window)
+void Racquet::updatePosition(int mouse_x)
 {
   if (getPosition().x - old_x == 0)
   {
@@ -27,7 +27,7 @@ void Racquet::updatePosition(const sf::RenderWindow& window)
     if (getPosition().x - old_x > 0)
       angle = 0;
     else
-      angle = 1 * Utils::PI;
+      angle = 1 * Utils::Pi;
   
     std::clock_t now = std::clock();
 
@@ -42,12 +42,10 @@ void Racquet::updatePosition(const sf::RenderWindow& window)
 
   old_x = getPosition().x;
   old_y = getPosition().y;
-
-  int new_x = sf::Mouse::getPosition(window).x;
   
-  if (not (new_x < Utils::left_wall_d + int(length / 2) || new_x > int(Utils::right_wall_d - length / 2)))
-    setPosition(new_x, Utils::catchline_y);
-  else if (new_x < Utils::left_wall_d + int(length / 2))
+  if (not (mouse_x < Utils::left_wall_d + int(length / 2) || mouse_x > int(Utils::right_wall_d - length / 2)))
+    setPosition(mouse_x, Utils::catchline_y);
+  else if (mouse_x < Utils::left_wall_d + int(length / 2))
     setPosition(Utils::left_wall_d + int(length / 2), Utils::catchline_y);
   else
     setPosition(Utils::right_wall_d - length / 2, Utils::catchline_y);

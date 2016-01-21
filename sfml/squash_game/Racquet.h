@@ -15,12 +15,12 @@ class Racquet : public Thing
   std::clock_t old_time;
 
 public:
-  Racquet() : Thing(false) {}
+  Racquet(int x, int y, int len, int hei) : Thing(false, true), length(len), height(hei) { setPosition(x, y); }
 
   void setDimentions(int l, int h) { length = l; height = h; }
   sf::Vector2f getDimentions() const { return sf::Vector2f(length, height); }
   void changePosition(int xx, int yy) override;
-  void updatePosition(const sf::RenderWindow& window);
+  void updatePosition(int mouse_x) override;
   void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
   std::vector<std::vector<int>> getBorders() const override;
 
