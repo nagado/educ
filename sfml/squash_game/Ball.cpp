@@ -6,6 +6,14 @@
 #include "Ball.h"
 
 
+Ball::Ball(int xx, int yy, int rad, double ang, double spe) : Thing(true, true, ang, spe), radius(rad) 
+{
+  setPosition(xx, yy);
+  x = xx;
+  y = yy; 
+}
+
+
 void Ball::move()
 {
   if (angle > 2 * Utils::Pi || angle < 0 * Utils::Pi)
@@ -37,6 +45,7 @@ void Ball::draw(sf::RenderTarget& target, sf::RenderStates states) const
   int ddF_y = -2 * radius;
   int xx = 0;
   int yy = radius;
+
   std::vector<sf::Vertex> vertices;
   const int vars_count = 4;
   int vars[vars_count][2] {{0, radius}, {0, -radius}, { -radius, 0}, {radius, 0}};

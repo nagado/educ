@@ -14,12 +14,15 @@ class Game
 
 public:
   Game(sf::RenderWindow& window);
+  ~Game() {}
 
   void update(const sf::RenderWindow& window);
-  bool isOver();
-  void show(sf::RenderWindow& window);
-  void showGameOver(sf::RenderWindow& window);//make that real
   bool areColliding(std::vector<std::vector<int>> thing1_borders, std::vector<std::vector<int>> thing2_borders);
+  void show(sf::RenderWindow& window);
+
+  bool isOver();
+  void showGameOver(sf::RenderWindow& window);
+
 };
 
 #endif
