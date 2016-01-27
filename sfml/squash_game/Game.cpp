@@ -64,7 +64,7 @@ void Game::show(sf::RenderWindow& window)
 
 bool Game::areColliding(std::vector<std::vector<int>> thing1_borders, std::vector<std::vector<int>> thing2_borders)
 {
-  int start1 [] {thing1_borders[0][0], thing1_borders[0][1]};//sf::Vertex?
+  int start1 [] {thing1_borders[0][0], thing1_borders[0][1]};
   int endOf1 [] {thing1_borders[1][0], thing1_borders[1][1]};
   int start2 [] {thing2_borders[0][0], thing2_borders[0][1]};
   int endOf2 [] {thing2_borders[1][0], thing2_borders[1][1]};

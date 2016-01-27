@@ -1,6 +1,6 @@
 #include <SFML/Graphics.hpp>
 #include "Racquet.h"
-#include "TextException.h"
+#include <type_traits>
 #include "Utils.h"
 #include <math.h>
 #include "Ball.h"
@@ -16,8 +16,7 @@ Ball::Ball(int xx, int yy, int rad, double ang, double spe) : Thing(true, true, 
 
 void Ball::move()
 {
-  if (angle > 2 * Utils::Pi || angle < 0 * Utils::Pi)
-    throw TextException("Unacceptable angle\n");
+  std::static_assert(angle < 2 * Utils::Pi && angle > 0 * Utils::Pi, "Unacceptable angle\n");
 
   x += speed * cos(angle);
   y -= speed * sin(angle);
@@ -122,8 +121,7 @@ void Ball::recalculateAngle(const std::vector<std::vector<int>> thing_borders, c
         angle = Utils::Pi - acos((side * side + thing_speed * thing_speed - speed * speed) / (2 * side * thing_speed));
       }
 
-      if (side <= 0)
-        throw TextException("Side calculations are uncorrect\n");  
+      std::static_assert(side > 0, "Side calculations are uncorrect\n");
 
       if (angle == 0)
         angle = 0.1 * Utils::Pi;
