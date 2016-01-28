@@ -10,7 +10,7 @@ class Wall : public Thing
   int height;
 
 public:
-  Wall(int x, int y, int len, int hei) : Thing(false, false), length(len), height(hei) { setPosition(x, y); }
+  Wall(int x, int y, int len, int hei) : Thing(), length(len), height(hei) { setPosition(x, y); }
   ~Wall() override {};
 
   void changePosition(int xx, int yy) override { setPosition(xx, yy); }

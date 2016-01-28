@@ -15,7 +15,8 @@ class Racquet : public Thing
   std::clock_t old_time;
 
 public:
-  Racquet(int x, int y, int len, int hei) : Thing(false, true), length(len), height(hei) { setPosition(x, y); }
+  Racquet() : Thing() {}
+  Racquet(int x, int y, int len, int hei) : Thing(), length(len), height(hei) { setPosition(x, y); }
   ~Racquet() override {};
 
   void setDimentions(int l, int h) { length = l; height = h; }
